@@ -1,3 +1,5 @@
+<p align="center"><img src="icon.png" alt="JadePaperBridge icon" width="160"></p>
+
 # JadePaperBridge
 
 A Paper plugin that implements the server side of the [Jade](https://github.com/Snownee/Jade) mod's network protocol.

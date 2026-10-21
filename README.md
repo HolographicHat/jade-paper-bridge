@@ -21,7 +21,7 @@ Spigot/CraftBukkit is **not** supported. The plugin reads Minecraft internals di
 
 ## Installation
 
-1. Download `JadePaperBridge-<version>.jar` from the releases, or [build it yourself](#building).
+1. Download the latest `JadePaperBridge-<version>.jar` from [Releases](https://github.com/MaxXLive/jade-paper-bridge/releases), or [build it yourself](#building). Pick the release whose version starts with your server's Minecraft version.
 2. Put it into your server's `plugins/` folder.
 3. Restart the server.
 
@@ -149,11 +149,29 @@ Requests are only handled after a successful handshake. Malformed packets are ig
 ./gradlew build
 ```
 
-The jar ends up in `build/libs/`. The build uses [paperweight-userdev](https://github.com/PaperMC/paperweight) and needs JDK 25. Gradle downloads the Paper dev bundle on the first run.
+The jar ends up in `build/libs/`. The build uses [paperweight-userdev](https://github.com/PaperMC/paperweight) and needs JDK 25. Gradle downloads the Paper dev bundle on the first run. Local builds are versioned `<minecraft>-dev`.
+
+## Versioning and releases
+
+Versions have the form **`<minecraft version>-patch-<n>`**, for example `26.3-patch-1`, `26.3-patch-2`, `26.4-patch-1`. The Minecraft version says which server the jar is for. The patch number counts the releases for that Minecraft version.
+
+Releases are made by [GitHub Actions](.github/workflows/build.yml):
+
+| Event | What happens |
+|---|---|
+| Push to `main` | Build, tag `v<version>`, GitHub release with the jar and a changelog |
+| Pull request to `main` | Build only. The jar (`…-pr.<number>`) is attached to the workflow run as an artifact |
+| Push that only changes `*.md` files | Nothing |
+
+[`.github/scripts/release-info.sh`](.github/scripts/release-info.sh) picks the next version and writes the changelog:
+
+- The Minecraft version comes from `minecraftVersion` in `gradle.properties`. When you change it, the patch number starts again at 1.
+- The patch number continues from the highest `v<minecraft>-patch-<n>` tag.
+- The changelog lists the commits since the previous release. Commits named in the [Conventional Commits](https://www.conventionalcommits.org) style are grouped: `feat:` under *Features*, `fix:`/`perf:` under *Fixes*. `docs:`, `ci:`, `test:` and `style:` commits are left out. All other commits go under *Changes*.
 
 ### Updating for a new Jade or Minecraft version
 
-The protocol comes from Jade's `snownee.jade.network` package and the server halves of its providers (`IServerDataProvider` / `StreamServerDataProvider` in `snownee.jade.addon`). After updating the Paper dev bundle in `build.gradle.kts`, check:
+The protocol comes from Jade's `snownee.jade.network` package and the server halves of its providers (`IServerDataProvider` / `StreamServerDataProvider` in `snownee.jade.addon`). After updating `minecraftVersion` and `paperBuild` in `gradle.properties`, check:
 
 - `Jade.PROTOCOL_VERSION`. It has to match `JadeNetworkHandler.PROTOCOL_VERSION`. If it doesn't, clients see Jade's "protocol mismatch" message.
 - The packet codecs in `snownee.jade.network`.

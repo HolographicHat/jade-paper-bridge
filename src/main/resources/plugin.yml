@@ -1,7 +1,7 @@
 name: JadePaperBridge
 version: '${version}'
 main: com.maxxlive.jadepaperbridge.JadePaperBridge
-api-version: '26.3'
+api-version: '${minecraftVersion}'
 description: Server-side counterpart of the Jade mod for Paper servers
 authors: [MaxXLive]
 commands:

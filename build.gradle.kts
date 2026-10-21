@@ -3,10 +3,12 @@ plugins {
     id("io.papermc.paperweight.userdev") version "2.0.0-beta.24"
 }
 
-group = "com.maxxlive"
-version = "1.0.0"
+val minecraftVersion: String by project
+val paperBuild: String by project
 
-val paperVersion = "26.3.build.209-stable"
+group = "com.maxxlive"
+// CI passes -PpluginVersion=<mc>-patch-<n>; local builds are marked as dev builds
+version = providers.gradleProperty("pluginVersion").getOrElse("$minecraftVersion-dev")
 
 repositories {
     mavenCentral()
@@ -14,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle(paperVersion)
+    paperweight.paperDevBundle("$minecraftVersion.build.$paperBuild-stable")
 }
 
 java {
@@ -27,7 +29,7 @@ tasks {
         options.release = 25
     }
     processResources {
-        val props = mapOf("version" to project.version)
+        val props = mapOf("version" to project.version, "minecraftVersion" to minecraftVersion)
         inputs.properties(props)
         filesMatching("plugin.yml") {
             expand(props)

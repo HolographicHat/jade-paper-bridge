@@ -1,0 +1,16 @@
+name: JadePaperBridge
+version: '${version}'
+main: com.maxxlive.jadepaperbridge.JadePaperBridge
+api-version: '26.3'
+description: Server-side counterpart of the Jade mod for Paper servers
+authors: [MaxXLive]
+commands:
+  jadepaperbridge:
+    description: Manage JadePaperBridge
+    usage: /<command> <reload|status|overlay <player> <show|hide>>
+    aliases: [jpb]
+    permission: jadepaperbridge.admin
+permissions:
+  jadepaperbridge.admin:
+    description: Use /jadepaperbridge
+    default: op

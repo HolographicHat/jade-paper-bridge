@@ -1,0 +1,19 @@
+# JadePaperBridge - lets Jade clients receive server data on a Paper server.
+
+# How many blocks beyond the player's interaction range a request may target.
+# Same as Jade's game rule "jade:max_position_deviation" (default 21).
+max-position-deviation: 21
+
+# Provider ids that are not offered to clients, e.g.
+#   - minecraft:command_block
+#   - minecraft:item_storage
+disabled-providers: []
+
+# Jade plugin options forced on every client (they show up as locked in the Jade settings).
+# Same as Jade's config/jade/server-plugin-overrides.json. Format: "namespace:option=value", e.g.
+#   - "minecraft:item_storage.normal_amount=9"
+#   - "minecraft:animal_owner=false"
+config-overrides: []
+
+# Log handshakes and errors of individual providers.
+debug: false

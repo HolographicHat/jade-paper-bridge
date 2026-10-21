@@ -162,6 +162,7 @@ Releases are made by [GitHub Actions](.github/workflows/build.yml):
 | Push to `main` | Build, tag `v<version>`, GitHub release with the jar and a changelog, upload to [Modrinth](https://modrinth.com/project/zq147eR3) and [Hangar](https://hangar.papermc.io/MaxXLive/JadePaperBridge) |
 | Pull request to `main` | Build only. The jar (`…-pr.<number>`) is attached to the workflow run as an artifact |
 | Push that only changes `*.md` files | Nothing |
+| Push with only `docs:`/`ci:`/`test:`/`style:` commits since the last release | Build only, no release |
 
 [`.github/scripts/release-info.sh`](.github/scripts/release-info.sh) picks the next version and writes the changelog:
 

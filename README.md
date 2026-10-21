@@ -21,7 +21,7 @@ Spigot/CraftBukkit is **not** supported. The plugin reads Minecraft internals di
 
 ## Installation
 
-1. Download the latest `JadePaperBridge-<version>.jar` from [Releases](https://github.com/MaxXLive/jade-paper-bridge/releases), or [build it yourself](#building). Pick the release whose version starts with your server's Minecraft version.
+1. Download the latest `JadePaperBridge-<version>.jar` from [Hangar](https://hangar.papermc.io/MaxXLive/JadePaperBridge), [Modrinth](https://modrinth.com/project/zq147eR3) or [GitHub Releases](https://github.com/MaxXLive/jade-paper-bridge/releases), or [build it yourself](#building). Pick the release whose version starts with your server's Minecraft version.
 2. Put it into your server's `plugins/` folder.
 3. Restart the server.
 
@@ -159,7 +159,7 @@ Releases are made by [GitHub Actions](.github/workflows/build.yml):
 
 | Event | What happens |
 |---|---|
-| Push to `main` | Build, tag `v<version>`, GitHub release with the jar and a changelog |
+| Push to `main` | Build, tag `v<version>`, GitHub release with the jar and a changelog, upload to [Modrinth](https://modrinth.com/project/zq147eR3) and [Hangar](https://hangar.papermc.io/MaxXLive/JadePaperBridge) |
 | Pull request to `main` | Build only. The jar (`…-pr.<number>`) is attached to the workflow run as an artifact |
 | Push that only changes `*.md` files | Nothing |
 

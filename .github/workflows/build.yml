@@ -69,3 +69,72 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "JadePaperBridge $VERSION" \
             --notes-file "$RUNNER_TEMP/CHANGELOG.md"
+
+      - name: Publish to Modrinth
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.info.outputs.released != 'true'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT: zq147eR3
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          if [[ -z "$MODRINTH_TOKEN" ]]; then
+            echo "::warning::MODRINTH_TOKEN is not set, skipping Modrinth upload"
+            exit 0
+          fi
+          mc_version=$(sed -n 's/^minecraftVersion=//p' gradle.properties | tr -d '[:space:]')
+          jq -n \
+            --arg project "$MODRINTH_PROJECT" \
+            --arg version "$VERSION" \
+            --arg mc "$mc_version" \
+            --rawfile changelog "$RUNNER_TEMP/CHANGELOG.md" \
+            '{
+              project_id: $project,
+              name: "JadePaperBridge \($version)",
+              version_number: $version,
+              changelog: $changelog,
+              game_versions: [$mc],
+              loaders: ["paper", "purpur"],
+              version_type: "release",
+              featured: true,
+              dependencies: [],
+              file_parts: ["file"],
+              primary_file: "file"
+            }' > "$RUNNER_TEMP/modrinth.json"
+          curl --fail-with-body -sS https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -H "User-Agent: MaxXLive/jade-paper-bridge (github.com/MaxXLive/jade-paper-bridge)" \
+            -F "data=<$RUNNER_TEMP/modrinth.json;type=application/json" \
+            -F "file=@build/libs/JadePaperBridge-$VERSION.jar;type=application/java-archive"
+
+      - name: Publish to Hangar
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.info.outputs.released != 'true'
+        env:
+          HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
+          HANGAR_PROJECT: MaxXLive/JadePaperBridge
+          VERSION: ${{ steps.info.outputs.version }}
+        run: |
+          if [[ -z "$HANGAR_API_TOKEN" ]]; then
+            echo "::warning::HANGAR_API_TOKEN is not set, skipping Hangar upload"
+            exit 0
+          fi
+          mc_version=$(sed -n 's/^minecraftVersion=//p' gradle.properties | tr -d '[:space:]')
+          # the API key is exchanged for a short-lived JWT
+          jwt=$(curl --fail-with-body -sS -X POST "https://hangar.papermc.io/api/v1/authenticate?apiKey=$HANGAR_API_TOKEN" | jq -r .token)
+          echo "::add-mask::$jwt"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg mc "$mc_version" \
+            --rawfile changelog "$RUNNER_TEMP/CHANGELOG.md" \
+            '{
+              version: $version,
+              channel: "Release",
+              description: $changelog,
+              platformDependencies: {PAPER: [$mc]},
+              pluginDependencies: {},
+              files: [{platforms: ["PAPER"]}]
+            }' > "$RUNNER_TEMP/hangar.json"
+          curl --fail-with-body -sS "https://hangar.papermc.io/api/v1/projects/$HANGAR_PROJECT/upload" \
+            -H "Authorization: $jwt" \
+            -H "User-Agent: MaxXLive/jade-paper-bridge (github.com/MaxXLive/jade-paper-bridge)" \
+            -F "versionUpload=<$RUNNER_TEMP/hangar.json;type=application/json" \
+            -F "files=@build/libs/JadePaperBridge-$VERSION.jar;type=application/java-archive"

@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
+import net.minecraft.core.Direction;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -152,9 +153,20 @@ public final class JadeNetworkHandler implements PluginMessageListener {
 		send(player, JadeIds.PACKET_SHOW_OVERLAY, buf -> buf.writeBoolean(show));
 	}
 
+	private static BlockHitResult readBlockHitResult(RegistryFriendlyByteBuf input) {
+		BlockPos pos = BlockPos.STREAM_CODEC.decode(input);
+		Direction face = Direction.STREAM_CODEC.decode(input);
+		float clickX = input.readFloat();
+		float clickY = input.readFloat();
+		float clickZ = input.readFloat();
+		boolean inside = input.readBoolean();
+		boolean worldBorder = input.readBoolean();
+		return new BlockHitResult(new Vec3((double)pos.getX() + (double)clickX, (double)pos.getY() + (double)clickY, (double)pos.getZ() + (double)clickZ), face, pos, inside, worldBorder);
+	}
+
 	private void handleBlockRequest(ServerPlayer player, RegistryFriendlyByteBuf buf) {
 		boolean showDetails = buf.readBoolean();
-		BlockHitResult hit = BlockHitResult.STREAM_CODEC.decode(buf);
+		BlockHitResult hit = readBlockHitResult(buf);
 		ItemStack serversideRep = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
 		CompoundTag tag = ByteBufCodecs.COMPOUND_TAG.decode(buf);
 		Set<ServerDataProvider<BlockAccessor>> requested = readProviders(buf, plugin.blockProviders());

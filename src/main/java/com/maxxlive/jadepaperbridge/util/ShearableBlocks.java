@@ -3,7 +3,13 @@ package com.maxxlive.jadepaperbridge.util;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
+import com.mojang.datafixers.util.Either;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.storage.loot.LootContext;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.CraftServer;
 import org.jspecify.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
@@ -36,11 +42,11 @@ import net.minecraft.world.level.storage.loot.predicates.MatchTool;
 public final class ShearableBlocks {
 	private static final Field LOOT_TABLE_POOLS = Reflect.field(LootTable.class, "pools");
 	private static final Field LOOT_POOL_ENTRIES = Reflect.field(LootPool.class, "entries");
-	private static final Field LOOT_POOL_CONDITION = Reflect.field(LootPool.class, "condition");
-	private static final Field ENTRY_CONDITION = Reflect.field(LootPoolEntryContainer.class, "condition");
+	private static final Field LOOT_POOL_CONDITION = Reflect.field(LootPool.class, "compositeCondition");
+	private static final Field ENTRY_CONDITION = Reflect.field(LootPoolEntryContainer.class, "compositeCondition");
 	private static final Field COMPOSITE_CHILDREN = Reflect.field(CompositeEntryBase.class, "children");
-	private static final Field NESTED_VALUE = Reflect.field(NestedLootTable.class, "value");
-	private static final Field CONDITION_TERMS = Reflect.field(CompositeLootItemCondition.class, "terms");
+	private static final Field NESTED_CONTENT = Reflect.field(NestedLootTable.class, "contents");
+	private static final Field CONDITION_PREDICATE = Reflect.field(CompositeLootItemCondition.class, "composedPredicate");
 
 	private final HolderLookup.RegistryLookup<LootTable> lootRegistry;
 	private final ItemStack toolItem;
@@ -83,8 +89,8 @@ public final class ShearableBlocks {
 		if (entries.isEmpty()) {
 			return false;
 		}
-		Optional<Holder<LootItemCondition>> condition = Reflect.get(LOOT_POOL_CONDITION, lootPool);
-		if (condition.isPresent() && isCorrectConditions(condition.get().value())) {
+		Predicate<LootContext> condition = Reflect.get(LOOT_POOL_CONDITION, lootPool);
+		if (isCorrectConditions(condition)) {
 			return true;
 		}
 		for (LootPoolEntryContainer entry : entries) {
@@ -103,30 +109,26 @@ public final class ShearableBlocks {
 				}
 			}
 		} else if (entry instanceof NestedLootTable nestedLootTable) {
-			for (Holder<LootTable> child : Reflect.<HolderSet<LootTable>>get(NESTED_VALUE, nestedLootTable)) {
-				if (doLootTable(child.value())) {
-					return true;
-				}
-			}
+			var contents = Reflect.<Either<ResourceKey<LootTable>, LootTable>>get(NESTED_CONTENT, nestedLootTable);
+			var lootDataResolver = ((CraftServer) Bukkit.getServer()).getHandle().getServer().reloadableRegistries().lookup();
+			var lootTable = contents.map(
+			    (name) -> lootDataResolver.get(name).map(Holder::value).orElse(LootTable.EMPTY),
+				(table) -> table
+			);
+            return doLootTable(lootTable);
 		} else {
-			Optional<Holder<LootItemCondition>> condition = Reflect.get(ENTRY_CONDITION, entry);
-			if (condition.isPresent()) {
-				return isCorrectConditions(condition.get().value());
-			}
+			Predicate<LootContext> condition = Reflect.get(ENTRY_CONDITION, entry);
+			return isCorrectConditions(condition);
 		}
 		return false;
 	}
 
-	private boolean isCorrectConditions(LootItemCondition condition) {
+	private boolean isCorrectConditions(Predicate<LootContext> condition) {
 		if (condition instanceof MatchTool(Optional<ItemPredicate> predicate)) {
 			ItemPredicate itemPredicate = predicate.orElse(null);
 			return itemPredicate != null && itemPredicate.test(toolItem);
 		} else if (condition instanceof AnyOfCondition anyOfCondition) {
-			for (Holder<LootItemCondition> child : Reflect.<HolderSet<LootItemCondition>>get(CONDITION_TERMS, anyOfCondition)) {
-				if (isCorrectConditions(child.value())) {
-					return true;
-				}
-			}
+            return isCorrectConditions(Reflect.get(CONDITION_PREDICATE, anyOfCondition));
 		}
 		return false;
 	}

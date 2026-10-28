@@ -184,7 +184,7 @@ public final class JadeNetworkHandler implements PluginMessageListener {
 
 		BlockState blockState = level.getBlockState(pos);
 		BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(pos) : null;
-		BlockAccessor accessor = new BlockAccessor(level, player, tag, showDetails, hit, blockState, blockEntity, serversideRep);
+		BlockAccessor accessor = new BlockAccessor(level, player, tag, showDetails, hit, blockState, blockEntity, serversideRep, plugin);
 		tag.putString("BlockId", BuiltInRegistries.BLOCK.getKey(blockState.getBlock()).toString());
 
 		appendData(accessor, plugin.blockProviders().providersFor(blockState.getBlock(), blockEntity), requested);
@@ -206,7 +206,7 @@ public final class JadeNetworkHandler implements PluginMessageListener {
 		if (entity instanceof EnderDragonPart part) {
 			entity = part.parentMob;
 		}
-		EntityAccessor accessor = new EntityAccessor(player.level(), player, tag, showDetails, entity, hitVec);
+		EntityAccessor accessor = new EntityAccessor(player.level(), player, tag, showDetails, entity, hitVec, plugin);
 		tag.putInt("EntityId", entity.getId());
 
 		if (isOutOfReach(player, entity.blockPosition(), player.entityInteractionRange()) || !canBeTarget(entity, player)) {

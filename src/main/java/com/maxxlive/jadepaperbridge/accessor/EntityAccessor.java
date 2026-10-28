@@ -1,5 +1,6 @@
 package com.maxxlive.jadepaperbridge.accessor;
 
+import com.maxxlive.jadepaperbridge.JadePaperBridge;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +16,8 @@ public record EntityAccessor(
 		CompoundTag serverData,
 		boolean showDetails,
 		Entity entity,
-		Vec3 hitVec) implements Accessor {
+		Vec3 hitVec,
+		JadePaperBridge plugin) implements Accessor {
 
 	@Override
 	public Entity target() {

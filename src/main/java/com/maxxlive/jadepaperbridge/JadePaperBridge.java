@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import cn.lunadeer.dominion.api.DominionAPI;
+import com.ghostchu.quickshop.api.QuickShopAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
@@ -64,6 +66,9 @@ public final class JadePaperBridge extends JavaPlugin implements Listener {
 	private Settings settings = new Settings(21, Set.of(), Map.of(), false);
 	private List<Block> shearableBlocks = List.of();
 
+	private QuickShopAPI quickShopApi;
+	private DominionAPI dominionApi;
+
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
@@ -91,6 +96,8 @@ public final class JadePaperBridge extends JavaPlugin implements Listener {
 				blockProviders.ids().size(),
 				entityProviders.ids().size(),
 				JadeNetworkHandler.PROTOCOL_VERSION));
+		quickShopApi = QuickShopAPI.getInstance();
+		dominionApi = DominionAPI.getInstance();
 	}
 
 	@Override
@@ -204,5 +211,13 @@ public final class JadePaperBridge extends JavaPlugin implements Listener {
 
 	public JadeNetworkHandler networkHandler() {
 		return networkHandler;
+	}
+
+    public QuickShopAPI quickShopApi() {
+        return quickShopApi;
+    }
+
+	public DominionAPI dominionApi() {
+		return dominionApi;
 	}
 }

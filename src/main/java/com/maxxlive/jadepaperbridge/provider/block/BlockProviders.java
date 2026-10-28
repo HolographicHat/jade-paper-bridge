@@ -3,6 +3,7 @@ package com.maxxlive.jadepaperbridge.provider.block;
 import java.util.List;
 import java.util.OptionalInt;
 
+import com.maxxlive.jadepaperbridge.util.DominionUtil;
 import org.jspecify.annotations.Nullable;
 
 import com.maxxlive.jadepaperbridge.JadeIds;
@@ -161,6 +162,9 @@ public final class BlockProviders {
 			if (!(accessor.blockEntity() instanceof JukeboxBlockEntity jukebox)) {
 				return null;
 			}
+			if (DominionUtil.isRestricted(accessor)) {
+				return null;
+			}
 			return jukebox.getTheItem();
 		}
 
@@ -181,6 +185,9 @@ public final class BlockProviders {
 		@Override
 		public @Nullable ItemStack streamData(BlockAccessor accessor) {
 			if (!(accessor.blockEntity() instanceof LecternBlockEntity lectern)) {
+				return null;
+			}
+			if (DominionUtil.isRestricted(accessor)) {
 				return null;
 			}
 			return lectern.getBook();
@@ -242,6 +249,9 @@ public final class BlockProviders {
 			if (!(accessor.blockEntity() instanceof AbstractFurnaceBlockEntity furnace)) {
 				return null;
 			}
+			if (DominionUtil.isRestricted(accessor)) {
+				return null;
+			}
 			return new Data(
 					furnace.cookingTimer,
 					furnace.cookingTotalTime,
@@ -266,6 +276,9 @@ public final class BlockProviders {
 		public @Nullable ItemStack streamData(BlockAccessor accessor) {
 			if (!(accessor.block() instanceof SelectableSlotContainer slotContainer) ||
 					!(accessor.blockEntity() instanceof ListBackedContainer container)) {
+				return null;
+			}
+			if (DominionUtil.isRestricted(accessor)) {
 				return null;
 			}
 			Direction facing = accessor.blockState().getValueOrElse(HorizontalDirectionalBlock.FACING, accessor.side());

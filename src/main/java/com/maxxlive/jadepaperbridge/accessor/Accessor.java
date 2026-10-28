@@ -1,5 +1,6 @@
 package com.maxxlive.jadepaperbridge.accessor;
 
+import com.maxxlive.jadepaperbridge.JadePaperBridge;
 import org.jspecify.annotations.Nullable;
 
 import io.netty.buffer.Unpooled;
@@ -31,6 +32,8 @@ public interface Accessor {
 	 * The block entity (blocks) or entity (entities). May be null for blocks without a block entity.
 	 */
 	@Nullable Object target();
+
+	JadePaperBridge plugin();
 
 	default <D> Tag encodeAsNbt(StreamEncoder<? super RegistryFriendlyByteBuf, D> codec, D value) {
 		RegistryFriendlyByteBuf buf = new RegistryFriendlyByteBuf(Unpooled.buffer(), level().registryAccess());

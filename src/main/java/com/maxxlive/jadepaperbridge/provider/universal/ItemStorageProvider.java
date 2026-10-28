@@ -6,6 +6,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
+import com.ghostchu.quickshop.api.shop.permission.BuiltInShopPermission;
+import com.ghostchu.quickshop.util.Util;
+import com.maxxlive.jadepaperbridge.util.DominionUtil;
+import net.minecraft.world.level.block.entity.*;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.Nullable;
 
 import com.google.common.cache.Cache;
@@ -34,11 +40,6 @@ import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.ChestBlock;
-import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
-import net.minecraft.world.level.block.entity.CampfireBlockEntity;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.level.block.entity.EnderChestBlockEntity;
 
 /**
  * Port of {@code snownee.jade.addon.universal.ItemStorageProvider} together with the two vanilla
@@ -72,12 +73,52 @@ public class ItemStorageProvider<A extends Accessor> implements ServerDataProvid
 	private static final StreamCodec<RegistryFriendlyByteBuf, Map.Entry<Identifier, List<ViewGroup<ItemStack>>>> STREAM_CODEC = ViewGroup.listCodec(
 			ITEM_CODEC);
 
+	// quickshop-bukkit/src/main/java/com/ghostchu/quickshop/listener/PlayerLockClickListener.java
+	private boolean checkQuickShopAccess(A accessor) {
+		if (!(accessor.target() instanceof BaseContainerBlockEntity block)) {
+			return true;
+		}
+		var blockLvl = block.getLevel();
+		var blockLoc = block.getLocation();
+		if (blockLvl == null || blockLoc == null) {
+			return true;
+		}
+		if (Util.isBlacklistWorld(blockLvl.getWorld()) || !Util.isShoppables(block.getBlockState().getBukkitMaterial())) {
+			return true;
+		}
+		var shopApi = accessor.plugin().quickShopApi();
+		var shopMgr = shopApi.getShopManager();
+		var shop = shopMgr.getShop(blockLoc);
+		if (shop == null) {
+			return true;
+		}
+		var bukkitPlayer = (org.bukkit.entity.Player) accessor.player().getBukkitEntity();
+		return !shopApi.getConfig().getBoolean("shop.lock")
+				|| shop.playerAuthorize(bukkitPlayer.getUniqueId(), BuiltInShopPermission.ACCESS_INVENTORY)
+				|| bukkitPlayer.hasPermission("quickshop.other.open");
+	}
+
+	private static final NamespacedKey JLI_CHEST_ID_KEY = new NamespacedKey("justlootit", "id");
+
 	@Override
 	public void appendServerData(CompoundTag tag, A accessor) {
 		if (accessor.target() instanceof AbstractFurnaceBlockEntity) {
 			return;
 		}
 		Object target = accessor.target();
+		Player player = accessor.player();
+		if (target instanceof BaseContainerBlockEntity te) {
+			if (te.persistentDataContainer.has(JLI_CHEST_ID_KEY, PersistentDataType.LONG)) {
+				tag.putBoolean("Loot", true);
+				return;
+			}
+			if (!player.isCreative() && !player.isSpectator()) {
+				if (!checkQuickShopAccess(accessor) || DominionUtil.isRestricted(accessor)) {
+					tag.putBoolean("Locked", true);
+					return;
+				}
+			}
+		}
 		Map.Entry<Identifier, List<ViewGroup<ItemStack>>> entry = extensionData(accessor);
 		if (entry != null) {
 			for (ViewGroup<ItemStack> group : entry.getValue()) {
@@ -88,7 +129,6 @@ public class ItemStorageProvider<A extends Accessor> implements ServerDataProvid
 			tag.put(JadeIds.UNIVERSAL_ITEM_STORAGE.toString(), accessor.encodeAsNbt(STREAM_CODEC, entry));
 			return;
 		}
-		Player player = accessor.player();
 		if (target instanceof RandomizableContainer containerEntity && containerEntity.getLootTable() != null) {
 			tag.putBoolean("Loot", true);
 		} else if (target instanceof ContainerEntity containerEntity && containerEntity.getContainerLootTable() != null) {

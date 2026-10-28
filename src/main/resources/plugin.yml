@@ -2,6 +2,9 @@ name: JadePaperBridge
 version: '${version}'
 main: com.maxxlive.jadepaperbridge.JadePaperBridge
 api-version: '${minecraftVersion}'
+depend:
+  - QuickShop-Hikari
+  - Dominion
 description: Server-side counterpart of the Jade mod for Paper servers
 authors: [MaxXLive]
 commands:

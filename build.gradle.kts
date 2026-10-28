@@ -13,10 +13,13 @@ version = providers.gradleProperty("pluginVersion").getOrElse("$minecraftVersion
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.codemc.io/repository/ghost-chu/")
 }
 
 dependencies {
     paperweight.paperDevBundle("$minecraftVersion.build.$paperBuild-stable")
+    compileOnly("com.ghostchu:quickshop-bukkit:6.3.0.1")
+    compileOnly("cn.lunadeer:DominionAPI:4.9.6")
 }
 
 java {

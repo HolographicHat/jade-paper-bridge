@@ -1,5 +1,6 @@
 package com.maxxlive.jadepaperbridge.accessor;
 
+import com.maxxlive.jadepaperbridge.JadePaperBridge;
 import org.jspecify.annotations.Nullable;
 
 import net.minecraft.core.BlockPos;
@@ -21,7 +22,8 @@ public record BlockAccessor(
 		BlockHitResult hit,
 		BlockState blockState,
 		@Nullable BlockEntity blockEntity,
-		ItemStack serversideRep) implements Accessor {
+		ItemStack serversideRep,
+		JadePaperBridge plugin) implements Accessor {
 
 	public Block block() {
 		return blockState.getBlock();
@@ -38,5 +40,9 @@ public record BlockAccessor(
 	@Override
 	public @Nullable Object target() {
 		return blockEntity;
+	}
+
+	public JadePaperBridge plugin() {
+		return plugin;
 	}
 }
